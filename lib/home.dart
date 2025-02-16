@@ -105,6 +105,22 @@ class _HomeState extends State<Home> {
                             print("not acceptable");
                           }
                         },
+                        child: Text("login in")),
+                    ElevatedButton(
+                        onPressed: () {
+                          value.signin(
+                            email.text,
+                            password.text,
+                          );
+                          if (value.loading1 == false) {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => MyHomePage()));
+                          } else {
+                            print("not acceptable");
+                          }
+                        },
                         child: Text("sign in"))
                   ],
                 ),

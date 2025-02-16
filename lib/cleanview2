@@ -1,30 +1,13 @@
-import 'dart:io';
+im
+class cleanview2 extends StatefulWidget {
+  final String docId;
+  // final String image;
 
-import 'package:bloc/dynamiclink.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:just_audio/just_audio.dart';
-
-import 'package:share_plus/share_plus.dart';
-
-class cleanview extends StatefulWidget {
-  final String data;
-  final String image;
-  final String audio;
-
-  cleanview(
-      {Key? key, required this.data, required this.image, required this.audio})
+  cleanview2({Key? key, required this.data, required this.image})
       : super(key: key);
 
   @override
-  State<cleanview> createState() => _cleanviewState();
+  State<cleanview2> createState() => _cleanviewState();
 }
 
 bool ispause = false;
@@ -33,7 +16,7 @@ FlutterTts flutterTts = FlutterTts();
 
 Future<void> configureTts() async {}
 
-class _cleanviewState extends State<cleanview> {
+class _cleanview2State extends State<cleanview2> {
   void stopSpeaking() async {
     await flutterTts.stop();
     ispause = false;
@@ -74,39 +57,24 @@ class _cleanviewState extends State<cleanview> {
     // TODO: implement initState
     super.initState();
   }
-
-  bool playing = true;
-
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  Future<void> playAudio() async {
-    if (widget.audio == null || !File(widget.audio!).existsSync()) {
-      print("Error: File does not exist at path: ${widget.audio}");
-      return;
-    }
+ Future<void> fetchData() async {
     try {
-      await _audioPlayer.setUrl(widget.audio);
-      _audioPlayer.play();
-      setState(() {
-        playing = true;
-      });
-      print("playing>>>>$playing");
+      DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
+          .collection('newdbarticle')  // Change to your Firestore collection
+          .doc(widget.docId)
+          .get();
+
+      if (docSnapshot.exists) {
+        setState(() {
+          documentData = docSnapshot.data() as Map<String, dynamic>?;
+        });
+      } else {
+        print('Document does not exist');
+      }
     } catch (e) {
-      print("Error playing audio: $e");
+      print('Error fetching document: $e');
     }
   }
-
-  Future<void> pause() async {
-    try {
-      await _audioPlayer.pause();
-      setState(() {
-        playing = false;
-      });
-      print("pause>>>>$playing");
-    } catch (e) {
-      print("Error pausing audio: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,21 +144,6 @@ class _cleanviewState extends State<cleanview> {
               // alignment: Alignment(15, 10),
               child: Text(widget.data.toString()),
             ),
-            Container(
-              // alignment: Alignment(15, 10),
-              child: Text(widget.audio.toString() ?? ""),
-            ),
-            IconButton(
-                onPressed: () async {
-                  playing != playing;
-                  playing == false ? playAudio() : pause();
-                  // playing != playing;
-                  setState(() {
-                    print("iconplay>>>$playing");
-                  });
-                  // value.playaudio();
-                },
-                icon: Icon(Icons.play_circle_outline_rounded)),
           ]),
 
           // Positioned(

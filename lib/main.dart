@@ -1,6 +1,7 @@
 import 'package:bloc/bottomnav.dart';
 import 'package:bloc/home.dart';
 import 'package:bloc/log_detail.dart';
+
 import 'package:bloc/profile.dart';
 import 'package:bloc/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';

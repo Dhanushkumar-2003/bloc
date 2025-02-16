@@ -1,22 +1,35 @@
 import 'dart:io';
+// import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ItemData extends ChangeNotifier {
   File? _selectedImage; // Private variable to store the image.
 
   File? get selectImage => _selectedImage;
+
   bool _picke = false;
   bool get picke => _picke;
-
+  String _filePath = "";
+  String get filePath => _filePath;
   bool _loading = false;
   bool get loading => _loading;
+  bool _loading1 = false;
+  bool get loading1 => _loading;
   File? _selectedImage1;
+  File? _file;
+  File? get file => _file;
 
   File? get selectImage1 => _selectedImage;
+  String _downloadUrlAudio = "";
+  String get downloadUrlAudio => _downloadUrlAudio;
+  String _getlink = "";
+  String get getlink => _getlink;
+
   Future getImage() async {
     final _picker = ImagePicker();
     _picke = true;
@@ -27,61 +40,95 @@ class ItemData extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateUserProfile(String detail, String title) async {
+  void playaudio() async {
+    // var  dk = await AudioPlayer().play(_file!.path );
+    // _file!.path);
+    // ignore: avoid_print
+    // print("dkkkkk$dk");
+  }
+  Future pickAudio() async {
+    // requestAudioPermission14();
+    try {
+      print("testing>>>>>!");
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+      );
+      print("testing>>>>>2");
+      if (result != null) {
+        _filePath = result.files.single.path!;
+        print("Selected Audio File: $_filePath");
+        // AudioPlayer();
+      } else {
+        print("User canceled the picker");
+      }
+    } catch (e) {
+      print("errprrrrrrrrrrr>$e");
+    }
+    notifyListeners();
+  }
+
+  Future<void> uploadAudio() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.audio, // Pick audio files
+    );
+
+    if (result != null) {
+      _file = File(result.files.single.path!);
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      print("STRING FILENAME>>$fileName");
+
+      try {
+        print(' working>>>>>.>>');
+        // Upload audio to Firebase Storage
+        TaskSnapshot snapshot = await FirebaseStorage.instance
+            .ref('audios/$fileName.mp3') // Change extension as needed
+            .putFile(_file!);
+
+        print(' working222$snapshot>>>>>.>>');
+        // Get the download URL
+        _downloadUrlAudio = await snapshot.ref.getDownloadURL();
+
+        // Store the download URL in Firestore
+
+        print("Audio uploaded successfully: $_downloadUrlAudio");
+      } catch (e) {
+        print("Upload failed: $e");
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> CreateArticle(String detail, String title, String value) async {
     final user = FirebaseAuth.instance.currentUser;
-    // Public getter to access the image.
-
+    // // Public getter to access the image.
+    print("step11>>>");
     if (user != null) {
-      final userRef =
-          FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-      final _userRef = FirebaseFirestore.instance.collection('users');
+      // final _userRef = FirebaseFirestore.instance.collection('users');
       var imageName = DateTime.now().millisecondsSinceEpoch.toString();
       var storageRef =
           FirebaseStorage.instance.ref().child('log_image/$imageName.jpg');
-
+      print("step2>>>>>");
       // Upload file
       var uploadTask = storageRef.putFile(_selectedImage!);
       var downloadUrl = await (await uploadTask).ref.getDownloadURL();
       print("Download URL: $downloadUrl");
 
-      try {
-        await userRef.set({
-          'lastUpdated': FieldValue.serverTimestamp(),
-          'preferences': {'darkMode': true},
-        }, SetOptions(merge: true));
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc('publicpage')
-            .set({
-              
-          'lastUpdated': FieldValue.serverTimestamp(),
-          'preferences': {'darkMode': true},
-        }, SetOptions(merge: true));
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc('publicpage')
-            .update({
-          'title': FieldValue.arrayUnion([title]),
-          'hobbies': FieldValue.arrayUnion([detail]),
-          'image': FieldValue.arrayUnion([downloadUrl]),
-          'loginCount': FieldValue.increment(1),
-        });
-
-        await userRef.update({
-          'title': FieldValue.arrayUnion([title]),
-          'hobbies': FieldValue.arrayUnion([detail]),
-          'image': FieldValue.arrayUnion([downloadUrl]),
-          'loginCount': FieldValue.increment(1),
-        });
-
-        _picke = false;
-        print('akk>>>>>>>>');
-        print('User profile updated successfully');
-      } catch (e) {
-        print('Error updating user profile: $e');
-      }
+      print("step333>");
+      await FirebaseFirestore.instance.collection('newdbarticle').doc().set({
+        'title': title,
+        'hobbies': detail,
+        'image': downloadUrl,
+        'tag': value,
+        'audio': _filePath,
+        'userid': user.uid
+        // 'loginCount': FieldValue.increment(1),
+      });
+      _filePath == null;
     }
+    print("step444");
+    // var docid=collection.do
+    // String docId = docRef.id; // This is the document ID
+    // print('Document created with ID: $docId');
     notifyListeners();
   }
 
@@ -125,5 +172,11 @@ class ItemData extends ChangeNotifier {
     notifyListeners();
   }
 
+  void signin(String email, String password) async {
+    _loading = true;
+    UserCredential userCredential = await FirebaseAuth.instance
+        .signInWithEmailAndPassword(email: email, password: password);
+    _loading1 = false;
+  }
   // void updateUserProfile1(String text, String text2, String text3) {}
 }
