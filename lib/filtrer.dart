@@ -18,11 +18,12 @@ class _FilterScreenState extends State<FilterScreen> {
       appBar: AppBar(title: Center(child: Text('category'))),
       // body: ProductList(title: "title"),
       body: Container(
-        margin: EdgeInsets.only(left: 10, right: 10, top: 10),
+        margin: EdgeInsets.only(left: 20, right: 10, top: 10),
         child: SingleChildScrollView(
           scrollDirection: Axis.vertical,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
             // crossAxisAlignment: cros,
             children: [
               Row(

@@ -1,17 +1,22 @@
-import 'dart:io';
 // import 'package:audioplayers/audioplayers.dart';
+import 'dart:io';
+
+import 'package:bloc/bottomnav.dart';
+import 'package:bloc/profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:quickalert/quickalert.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class ItemData extends ChangeNotifier {
-  File? _selectedImage; // Private variable to store the image.
-
+  File? _selectedImage;
   File? get selectImage => _selectedImage;
-
+  bool uploaded = false;
   bool _picke = false;
   bool get picke => _picke;
   String _filePath = "";
@@ -29,13 +34,19 @@ class ItemData extends ChangeNotifier {
   String get downloadUrlAudio => _downloadUrlAudio;
   String _getlink = "";
   String get getlink => _getlink;
+  bool get complete => _complete;
+  bool _complete = false;
+  FilePickerResult? _videofile;
+  FilePickerResult? get vidoefile => _videofile;
 
+// <<<<<<<<get image for uploading article>>>>>>>>>>>>>>
   Future getImage() async {
     final _picker = ImagePicker();
     _picke = true;
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     final ak = image;
     _selectedImage = File(ak!.path.toString());
+    // _picke = false;
 
     notifyListeners();
   }
@@ -67,7 +78,7 @@ class ItemData extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> uploadAudio() async {
+  Future<void> uploaDdAudio() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.audio, // Pick audio files
     );
@@ -98,9 +109,50 @@ class ItemData extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> CreateArticle(String detail, String title, String value) async {
+  Future<void> deleteField(
+    String docId,
+  ) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('newdbarticle')
+          .doc(docId)
+          .delete();
+      print("Field deleted successfully");
+    } catch (e) {
+      print("Error deleting field: $e");
+    }
+    notifyListeners();
+  }
+
+  Future update(
+    String title,
+    String detail,
+    String userid,
+  ) async {
+    await FirebaseFirestore.instance.collection('newdbarticle').doc().update({
+      'title': title,
+      'hobbies': detail,
+
+      'userid': userid
+      // 'loginCount': FieldValue.increment(1),
+    });
+  }
+
+  Future<void> CreateArticle(
+      BuildContext context, String detail, String title, String value) async {
     final user = FirebaseAuth.instance.currentUser;
+
     // // Public getter to access the image.
+    SpinKitFadingCircle(
+      size: 200,
+      color: Colors.blueAccent,
+    );
+    QuickAlert.show(
+      context: context,
+      type: QuickAlertType.info,
+      title: 'uploading',
+      text: 'wait for few second',
+    );
     print("step11>>>");
     if (user != null) {
       // final _userRef = FirebaseFirestore.instance.collection('users');
@@ -123,25 +175,44 @@ class ItemData extends ChangeNotifier {
         'userid': user.uid
         // 'loginCount': FieldValue.increment(1),
       });
-      _filePath == null;
+
+      // filePath == false;
     }
+
+    uploaded = true;
+    _picke = false;
+    if (uploaded == true) {
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.success,
+        title: 'sucessfully upload your article',
+        text: 'check profile page',
+        confirmBtnText: "ok",
+        onConfirmBtnTap: () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => MyHomePage()));
+        },
+      );
+    }
+    uploaded = false;
     print("step444");
-    // var docid=collection.do
-    // String docId = docRef.id; // This is the document ID
-    // print('Document created with ID: $docId');
+
     notifyListeners();
   }
 
+// <<<< gt image form updatig user profile>>>>>>
   Future getImage1() async {
     final _picker = ImagePicker();
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    final ak = image;
+    final profileimage = image;
 
-    _selectedImage = File(ak!.path.toString());
+    _selectedImage = File(profileimage!.path.toString());
+
     notifyListeners();
   }
 
-  Future uploadfirebase1(String email, String password, String username) async {
+//<<<<< creare sigin page for user>>>>>>>>>>>//
+  Future uploadProfile(String email, String password, String username) async {
     try {
       _loading = true;
       print("step1>>>");
@@ -169,14 +240,55 @@ class ItemData extends ChangeNotifier {
     } catch (e) {
       print("error>>>>$e");
     }
+
     notifyListeners();
   }
 
-  void signin(String email, String password) async {
-    _loading = true;
+  void signin(BuildContext context, String email, String password) async {
+    print("loading>>>>>>>>>.11");
+    print("loading>>>>>>>>>.11");
+
+    _loading1 = true;
+    print("loading11>>$_loading1");
     UserCredential userCredential = await FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password);
-    _loading1 = false;
+
+    print("loading>>>>>>>>>.12");
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => MyHomePage()));
+    // _loading1 = false;
+    // notifyListeners();
+    print("loading11>>$_loading1");
   }
-  // void updateUserProfile1(String text, String text2, String text3) {}
+
+  Future pickvideo() async {
+    final ImagePicke = ImagePicker();
+    try {
+      final DateTime now = DateTime.now();
+      final int millSeconds = now.millisecondsSinceEpoch;
+      final String month = now.month.toString();
+      final String date = now.day.toString();
+      // final String storageId = (millSeconds.toString() + uid);
+      final String today = ('$month-$date');
+
+      _videofile = (await ImagePicke.pickVideo(source: ImageSource.gallery))
+          as FilePickerResult?;
+      print("vidoefile>>$_videofile");
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child("video")
+          .child(today)
+          .child(millSeconds.toString());
+      final uploadTask = ref.putFile(File(file!.path));
+      TaskSnapshot taskSnapshot = await uploadTask;
+      final downloadURL = await taskSnapshot.ref.getDownloadURL();
+      // Uri downloadUrl =await (await uploadTask).downloadUrl;
+
+      final String url = downloadURL.toString();
+
+      print("url>>>>$url");
+    } catch (error) {
+      print(error);
+    }
+  }
 }

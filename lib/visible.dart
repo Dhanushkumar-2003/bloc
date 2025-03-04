@@ -75,21 +75,17 @@ class _cleanviewState extends State<cleanview> {
     super.initState();
   }
 
-  bool playing = true;
+  bool playing = false;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
-  Future<void> playAudio() async {
-    if (widget.audio == null || !File(widget.audio!).existsSync()) {
-      print("Error: File does not exist at path: ${widget.audio}");
-      return;
-    }
+  Future playAudio() async {
     try {
       await _audioPlayer.setUrl(widget.audio);
       _audioPlayer.play();
       setState(() {
         playing = true;
       });
-      print("playing>>>>$playing");
+      print("play function>>>>$playing");
     } catch (e) {
       print("Error playing audio: $e");
     }
@@ -190,7 +186,9 @@ class _cleanviewState extends State<cleanview> {
                   });
                   // value.playaudio();
                 },
-                icon: Icon(Icons.play_circle_outline_rounded)),
+                icon: playing == false
+                    ? Icon(Icons.play_arrow)
+                    : Icon(Icons.pause)),
           ]),
 
           // Positioned(

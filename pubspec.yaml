@@ -44,8 +44,12 @@ dependencies:
   flutter_tts: 
   file_picker: ^3.0.2+2
   share_plus: ^4.5.2
+  video_player:
+  flutter_spinkit:
+  # image_picker: ^1.1.2
+  quickalert:
   # audioplayers: ^5.2.1 
-  just_audio: ^0.9.30
+  just_audio: 
  
   flutter:
     sdk: flutter

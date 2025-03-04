@@ -120,62 +120,78 @@ class _ProfileState extends State<Profile> {
               Card(
                 child: Center(
                   child: Container(
-                    child: StreamBuilder(
+                    child: StreamBuilder<DocumentSnapshot>(
                       stream: FirebaseFirestore.instance
                           .collection('profile')
                           .doc(_auth.currentUser!.uid)
                           .snapshots(),
                       builder: (context, snapshot) {
-                        final data = snapshot.data;
-                        print("fdatat>>$data");
-                        if (snapshot.hasData) {
-                          // The following doesn't work
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  // Color(0xFFFFFFFF),
-                                  Color(0xFF007AFF), // Blue
-                                  Color(0xFFFFFFFF), // White
-                                ],
-                              ),
-                            ),
-                            height: 150,
-                            child: Column(
-                              children: [
-                                Text(
-                                  "userdetail",
-                                  style: TextStyle(fontSize: 20),
-                                ),
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 40,
-                                      backgroundImage: NetworkImage(
-                                          data!["Image"].toString()),
-                                    ),
-                                    SizedBox(
-                                      width: 20,
-                                    ),
-                                    Container(
-                                      child: Text(
-                                        data["username"],
-                                        style: TextStyle(fontSize: 30),
-                                      ),
-                                    )
-                                  ],
-                                ),
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator(); // Show loader until data arrives
+                        }
+
+                        if (!snapshot.hasData ||
+                            snapshot.data == null ||
+                            !snapshot.data!.exists) {
+                          return Text("User data  is loading");
+                        }
+
+                        final data =
+                            snapshot.data!.data() as Map<String, dynamic>?;
+
+                        if (data == null) {
+                          return Text("No user details available");
+                        }
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color(0xFF007AFF), // Blue
+                                Color(0xFFFFFFFF), // White
                               ],
                             ),
-                          );
-                        }
-                        if (snapshot.hasError) {
-                          return const Text('Error');
-                        } else {
-                          return const CircularProgressIndicator();
-                        }
+                          ),
+                          height: 150,
+                          child: Column(
+                            children: [
+                              Text(
+                                "User Details",
+                                style: TextStyle(fontSize: 20),
+                              ),
+                              Row(
+                                children: [
+                                  data.containsKey("Image") &&
+                                          data["Image"] != null
+                                      ? CircleAvatar(
+                                          radius: 40,
+                                          backgroundImage: NetworkImage(
+                                              data["Image"].toString()),
+                                        )
+                                      : CircleAvatar(
+                                          radius: 40,
+                                          backgroundColor:
+                                              Colors.grey, // Placeholder
+                                          child: Icon(Icons.person,
+                                              size: 40, color: Colors.white),
+                                        ),
+                                  SizedBox(width: 20),
+                                  Container(
+                                    child: Text(
+                                      data.containsKey("username")
+                                          ? data["username"]
+                                          : "No username",
+                                      style: TextStyle(fontSize: 30),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -242,43 +258,81 @@ class _ProfileState extends State<Profile> {
                                 final item = data[index]['hobbies'];
                                 final item2 = data[index]['image'];
                                 final item3 = data[index]['audio'];
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => cleanview(
-                                                data: item,
-                                                image: item2,
-                                                audio: item3)));
+                                print("userid>>>>>${data[index].id}");
+                                return Dismissible(
+                                  secondaryBackground:
+                                      Icon(Icons.delete_forever_sharp),
+                                  background: Icon(Icons.delete),
+                                  key: Key(data[index].id),
+                                  onDismissed: (direction) {
+                                    value.deleteField(data[index].id);
                                   },
-                                  child: Card(
-                                    child: Container(
-                                      height: 70,
-                                      padding: EdgeInsets.all(2),
-                                      margin: EdgeInsets.symmetric(
-                                          vertical: 8.0, horizontal: 16.0),
-                                      child: Row(
-                                        children: [
-                                          Image(
-                                            width: 70,
-                                            image: NetworkImage(data[index]
-                                                    ["image"]
-                                                .toString()),
-                                          ),
-                                          SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              maxLines: 2,
-                                              // maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              data[index]["title"].toString(),
-                                              style: TextStyle(
-                                                fontSize: 16,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => cleanview(
+                                                  data: item,
+                                                  image: item2,
+                                                  audio: item3)));
+                                    },
+                                    child: Card(
+                                      child: Container(
+                                        height: 70,
+                                        padding: EdgeInsets.all(2),
+                                        margin: EdgeInsets.symmetric(
+                                            vertical: 8.0, horizontal: 16.0),
+                                        child: Row(
+                                          children: [
+                                            // Container(
+                                            //   color: Colors.blue,
+                                            //   child: IconButton(
+                                            //       onPressed: () {
+                                            //         Navigator.push(
+                                            //             context,
+                                            //             MaterialPageRoute(
+                                            //                 builder: (context) =>
+                                            //                     cleanview(
+                                            //                         data: item,
+                                            //                         image:
+                                            //                             item2,
+                                            //                         audio:
+                                            //                             item3)));
+
+                                            //         value.update(
+                                            //             data[index]["title"],
+                                            //             data[index]["hobbies"],
+                                            //             data[index].id);
+                                            //       },
+                                            //       icon: Icon(Icons.edit)),
+                                            // ),
+                                            Image(
+                                              width: 70,
+                                              image: NetworkImage(data[index]
+                                                      ["image"]
+                                                  .toString()),
+                                            ),
+                                            SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text(
+                                                maxLines: 2,
+                                                // maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                data[index]["title"].toString(),
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                            IconButton(
+                                                onPressed: () {
+                                                  value.deleteField(
+                                                      data[index].id);
+                                                },
+                                                icon: Icon(Icons.delete))
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),

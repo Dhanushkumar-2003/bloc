@@ -1,6 +1,7 @@
 import 'package:bloc/filtrer.dart';
 import 'package:bloc/profile.dart';
 import 'package:bloc/public.dart';
+import 'package:bloc/signup.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,12 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [Profile(), Public_account(), FilterScreen()];
+  final List<Widget> _screens = [
+    Profile(),
+    Public_account(),
+    FilterScreen(),
+    Signup()
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         items: [
           BottomNavigationBarItem(
+            backgroundColor: Colors.blue,
             icon: Icon(Icons.home),
             label: 'Home',
           ),

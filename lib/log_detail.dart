@@ -1,6 +1,7 @@
+// import 'package:audioplayers/audioplayers.dart';
+// import 'package:audioplayers/audioplayers.dart';
 import 'dart:io';
-// import 'package:audioplayers/audioplayers.dart';
-// import 'package:audioplayers/audioplayers.dart';
+
 import 'package:bloc/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -14,6 +15,8 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:just_audio/just_audio.dart';
+
+import 'package:video_player/video_player.dart';
 
 // import 'package:google_ml_kit/google_ml_kit.dart';
 class log_detail extends StatefulWidget {
@@ -57,6 +60,7 @@ class _log_detailState extends State<log_detail> {
     await Permission.microphone.request();
   }
 
+  VideoPlayerController? _controller;
   @override
   void initState() {
     super.initState();
@@ -183,9 +187,10 @@ class _log_detailState extends State<log_detail> {
     }
   }
 
-  bool playing = true;
+  bool playing = false;
   Future<void> playAudio() async {
     try {
+      print("playaudio>>1");
       await _audioPlayer.setUrl(filePath);
       _audioPlayer.play();
       setState(() {
@@ -217,6 +222,15 @@ class _log_detailState extends State<log_detail> {
   String? _filePath;
   @override
   Widget build(BuildContext context) {
+    final provi = Provider.of<ItemData>(context);
+    if (provi.vidoefile != null) {
+      _controller = VideoPlayerController.file(
+        File(provi.vidoefile!.paths.toString()),
+      )..initialize().then((_) {
+          setState(() {});
+          _controller!.play();
+        });
+    }
     return Scaffold(
       appBar: AppBar(),
       floatingActionButton: FloatingActionButton.small(
@@ -255,17 +269,40 @@ class _log_detailState extends State<log_detail> {
                   height: 10,
                 ),
                 TextField(
-                  decoration: InputDecoration(hintText: "enter #talk"),
+                  decoration: InputDecoration(hintText: "enter tag"),
                   controller: values,
                 ),
                 Text(filePath),
-                IconButton(
-                    onPressed: () async {
-                      value.pickAudio();
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                        onPressed: () async {
+                          value.pickAudio();
 
-                      // value.uploadAudio();
-                    },
-                    icon: Icon(Icons.audiotrack)),
+                          // value.uploadAudio();
+                        },
+                        icon: Icon(Icons.audiotrack)),
+                    // Text("or"),
+                    // _controller != null && _controller!.value.isInitialized
+                    //     ? Container(
+                    //         height: 100,
+                    //         width: 100,
+                    //         child: AspectRatio(
+                    //           aspectRatio: _controller!.value.aspectRatio,
+                    //           child: VideoPlayer(_controller!),
+                    //         ),
+                    //       )
+                    //     : Container(
+                    //         child: Text("no video download yet"),
+                    //       ),
+                    // IconButton(
+                    //     onPressed: () {
+                    //       value.pickvideo();
+                    //     },
+                    //     icon: Icon(Icons.video_collection_rounded))
+                  ],
+                ),
                 // IconButton(onPressed: (){
 
                 // }, icon: icon)
@@ -336,7 +373,8 @@ class _log_detailState extends State<log_detail> {
                       // saveDetail(detail.text);
                       // save();
 
-                      value.CreateArticle(detail.text, title.text, values.text);
+                      value.CreateArticle(
+                          context, detail.text, title.text, values.text);
                     },
                     child: Text("save"))
               ],

@@ -213,24 +213,41 @@ class _Public_accountState extends State<Public_account> {
     super.initState();
   }
 
+  String name = '';
+
   @override
   Widget build(BuildContext context) {
     final provier = Provider.of<ItemData?>(context);
 
     return Scaffold(
-        appBar: AppBar(
-          title: Text("public article"),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  initDynamicLinks();
-                },
-                child: Text("share"))
-          ],
-        ),
-        body: StreamBuilder(
-          stream:
-              FirebaseFirestore.instance.collection('newdbarticle').snapshots(),
+      appBar: AppBar(
+        title: Card(
+            child: TextField(
+          decoration: InputDecoration(
+              prefixIcon: Icon(Icons.search), hintText: 'Search ...'),
+          onChanged: (val) {
+            setState(() {
+              name = val;
+            });
+          },
+        )),
+        actions: [
+          TextButton(
+              onPressed: () {
+                initDynamicLinks();
+              },
+              child: Text("share"))
+        ],
+      ),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: (name.isNotEmpty)
+              ? FirebaseFirestore.instance
+                  .collection('newdbarticle')
+                  .where("title", isGreaterThanOrEqualTo: name)
+                  .snapshots()
+              : FirebaseFirestore.instance
+                  .collection('newdbarticle')
+                  .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
@@ -240,8 +257,8 @@ class _Public_accountState extends State<Public_account> {
               return Center(child: Text("No data available"));
             }
             dynamic CollectionData = snapshot.data!.docs;
-            String docId = CollectionData[0].id;
-            print("docid>>$docId");
+            // String docId = CollectionData.id;
+            // print("docid>>$docId");
             print("data>>>${snapshot.data!.docs}");
             //  snapshot.data?.data();
 
@@ -352,7 +369,28 @@ class _Public_accountState extends State<Public_account> {
                 );
               }),
             );
-          },
-        ));
+          }
+          // dynamic CollectionData = snapshot.data!.docs;
+          // return ListView.builder(
+          //   itemCount: CollectionData.length,
+          //   itemBuilder: (context, index) {
+          //     var docData =
+          //         CollectionData[index].data() as Map<String, dynamic>;
+          //     String title = docData['title'] ?? 'No Title';
+          //     String imageUrl = docData['image'] ?? '';
+
+          //     return ListTile(
+          //       leading: CircleAvatar(
+          //         backgroundImage: imageUrl.isNotEmpty
+          //             ? NetworkImage(imageUrl)
+          //             : AssetImage('assets/default.png') as ImageProvider,
+          //       ),
+          //       title: Text(title),
+          //     );
+          //   },
+          // );
+
+          ),
+    );
   }
 }
