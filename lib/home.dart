@@ -24,7 +24,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   ImagePicker _picker = ImagePicker();
-
+//iohouhkjh//
   final firestore = FirebaseFirestore.instance;
 
   TextEditingController username = TextEditingController();
